@@ -9,13 +9,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func NewPostgresDB(cfg *config.Config) (*sql.DB, error) {
+func NewPostgresDB(cfg *config.Postgres) (*sql.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.User,
-		cfg.DB.Password,
+		"host=%s port=%s user=%s password=%s dbname=%s",
+		cfg.Host,
+		cfg.Port,
+		cfg.User,
+		cfg.Password,
+		cfg.Database,
 	)
 
 	db, err := sql.Open("postgres", dsn)

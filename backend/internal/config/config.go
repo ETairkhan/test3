@@ -4,9 +4,6 @@ import (
 	"os"
 )
 
-type Config struct {
-	DB *Postgres 
-}
 
 type Postgres struct {
 	Host     string 
@@ -16,15 +13,15 @@ type Postgres struct {
 	Database string 
 }
 
-func LoadDotEnv() *Config {
-	return &Config{
-		DB: &Postgres{
+func LoadDotEnv() *Postgres {
+	
+
+	return &Postgres{
 			Host:     getEnv("POSTGRES_HOST", "localhost"),
 			Port:     getEnv("POSTGRES_PORT", "5432"),
 			User:     getEnv("POSTGRES_USER", "admin"),
 			Password: getEnv("POSTGRES_PASSWORD", "admin"),
 			Database: getEnv("POSTGRES_DBNAME", "restaurant_db"),
-		},
 	}
 }
 
