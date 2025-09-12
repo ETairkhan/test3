@@ -22,7 +22,7 @@ func (s *TaskService) GetAllTasks() ([]models.Task, error) {
 	return s.repo.GetAll()
 }
 
-func (s *TaskService) AddTask(text string, priority models.Priority, dueDate time.Time) (*models.Task, error) {
+func (s *TaskService) AddTask(text string, priority core.Priority, dueDate time.Time) (*models.Task, error) {
 	tasks, err := s.repo.GetAll()
 	if err != nil {
 		return nil, err
@@ -124,10 +124,10 @@ func (s *TaskService) SortTasks(tasks []models.Task, sortBy core.SortType) []mod
 			return sorted[i].CreatedAt.After(sorted[j].CreatedAt)
 		})
 	case core.SortPriority:
-		priorityOrder := map[models.Priority]int{
-			models.PriorityHigh:   0,
-			models.PriorityMedium: 1,
-			models.PriorityLow:    2,
+		priorityOrder := map[core.Priority]int{
+			core.PriorityHigh:   0,
+			core.PriorityMedium: 1,
+			core.PriorityLow:    2,
 		}
 		sort.Slice(sorted, func(i, j int) bool {
 			if sorted[i].Priority == sorted[j].Priority {

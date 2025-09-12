@@ -11,7 +11,7 @@ import (
 
 func NewPostgresDB(cfg *config.Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.DB.Host,
 		cfg.DB.Port,
 		cfg.DB.User,

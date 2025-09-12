@@ -18,3 +18,12 @@ const (
 	SortDate      SortType = "date"
 	SortPriority  SortType = "priority"
 )
+
+
+type Priority string
+
+const (
+	PriorityLow    Priority = "low"
+	PriorityMedium Priority = "medium"
+	PriorityHigh   Priority = "high"
+)

@@ -1,10 +1,10 @@
-package handlers
+package handler
 
 import (
 	"time"
-	"todo-app/internal/domain/models"
-	"todo-app/internal/app/service"
 	"todo-app/internal/app/core"
+	"todo-app/internal/app/service"
+	"todo-app/internal/domain/models"
 )
 
 type TaskHandlers struct {
@@ -29,11 +29,11 @@ func (h *TaskHandlers) GetTasks(filter core.FilterType, sortBy core.SortType) ([
 	return sorted, nil
 }
 
-func (h *TaskHandlers) AddTask(text string, priority models.Priority, dueDate time.Time) (*models.Task, error) {
+func (h *TaskHandlers) AddTask(text string, priority core.Priority, dueDate time.Time) (*models.Task, error) {
 	if text == "" {
 		return nil, core.ErrEmptyTaskText
 	}
-	
+
 	return h.service.AddTask(text, priority, dueDate)
 }
 
@@ -59,4 +59,44 @@ func (h *TaskHandlers) ToggleTask(id string) error {
 	}
 
 	return core.ErrTaskNotFound
+}
+
+// ParseFilterType parses a string to a FilterType.
+func ParseFilterType(s string) core.FilterType {
+    switch s {
+    case "active":
+        return core.FilterActive
+    case "completed":
+        return core.FilterCompleted
+    case "today":
+        return core.FilterToday
+    case "week":
+        return core.FilterWeek
+    case "overdue":
+        return core.FilterOverdue
+    default:
+        return core.FilterAll
+    }
+}
+
+// ParseSortType parses a string to a SortType.
+func ParseSortType(s string) core.SortType {
+	switch s {
+	case "priority":
+		return core.SortDate
+	default:
+		return core.SortPriority
+	}
+}
+
+// ParsePriority parses a string to a Priority.
+func ParsePriority(s string) core.Priority {
+	switch s {
+	case "2", "medium":
+		return core.PriorityMedium
+	case "3", "high":
+		return core.PriorityHigh
+	default:
+		return core.PriorityLow
+	}
 }
