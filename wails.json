@@ -1,0 +1,34 @@
+{
+  "name": "todo-app",
+  "outputfilename": "todo-app",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "info": {
+    "companyName": "Your Company",
+    "productName": "To-Do List App",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright © 2023 Your Name",
+    "comments": "A simple to-do list application built with Wails"
+  },
+  "debounceMS": 100,
+  "devserverurl": "http://localhost:34115",
+  "appargs": "",
+  "nsisType": "multiple",
+
+  "wailsjsdir": "./frontend",
+  "version": "2",
+  "Platform": "windows",
+  "Arch": "amd64",
+  "port": 34115,
+  "bindings": {
+    "dialogs": {},
+    "menus": {},
+    "window": {}
+  }
+}
