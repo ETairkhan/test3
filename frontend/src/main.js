@@ -67,6 +67,7 @@ class TodoApp {
     async loadTasks() {
         try {
             this.tasks = await window.go.main.App.GetTasks();
+            console.log('Loaded tasks:', this.tasks); // Debug log
             this.renderTasks();
         } catch (error) {
             console.error('Ошибка загрузки задач:', error);
@@ -86,14 +87,22 @@ class TodoApp {
                 case 'high': priority = 3; break;
             }
 
+            // Handle deadline date
+            let deadline = null;
+            if (this.endDateInput.value) {
+                deadline = new Date(this.endDateInput.value).toISOString();
+            }
+
             const task = {
                 Title: title,
                 Body: "",
                 Priority: priority,
                 Status: "not_started",
-                Deadline: null
+                Deadline: deadline
             };
 
+            console.log('Creating task:', task); // Debug log
+            
             await window.go.main.App.CreateTask(task);
             
             // Reload tasks to get the updated list with IDs
@@ -107,15 +116,20 @@ class TodoApp {
             
         } catch (error) {
             console.error('Ошибка добавления задачи:', error);
-            alert('Не удалось добавить задачу');
+            alert('Не удалось добавить задачу: ' + error.message);
         }
     }
 
     async toggleTask(id) {
         try {
+            console.log('Toggling task:', id); // Debug log
+            
             // Find the current task to determine new status
             const task = this.tasks.find(t => t.ID === id);
-            if (!task) return;
+            if (!task) {
+                console.error('Task not found:', id);
+                return;
+            }
 
             let newStatus;
             if (task.Status === 'done') {
@@ -124,10 +138,13 @@ class TodoApp {
                 newStatus = 'done';
             }
 
+            console.log('Updating status:', id, '->', newStatus); // Debug log
+            
             await window.go.main.App.UpdateTaskStatus(id, newStatus);
             await this.loadTasks(); // Reload tasks to get updated status
         } catch (error) {
             console.error('Ошибка обновления задачи:', error);
+            alert('Не удалось обновить задачу: ' + error.message);
         }
     }
 
@@ -146,12 +163,13 @@ class TodoApp {
         if (!this.taskToDelete) return;
 
         try {
+            console.log('Deleting task:', this.taskToDelete.ID); // Debug log
             await window.go.main.App.DeleteTask(this.taskToDelete.ID);
             await this.loadTasks(); // Reload tasks after deletion
             this.hideDeleteModal();
         } catch (error) {
             console.error('Ошибка удаления задачи:', error);
-            alert('Не удалось удалить задачу');
+            alert('Не удалось удалить задачу: ' + error.message);
         }
     }
 
@@ -187,43 +205,85 @@ class TodoApp {
             return;
         }
 
-        this.tasksContainer.innerHTML = this.tasks.map(task => `
-            <div class="task-item ${task.Status === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
+        console.log('Rendering tasks:', this.tasks); // Debug log
+
+        this.tasksContainer.innerHTML = this.tasks.map(task => {
+            // Ensure we have valid data
+            const taskId = task.ID || '';
+            const taskTitle = task.Title || 'Без названия';
+            const taskStatus = task.Status || 'not_started';
+            const taskPriority = task.Priority || 2;
+            const createdAt = task.CreatedAt || new Date().toISOString();
+            
+            return `
+            <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
                 <div class="task-content">
                     <input 
                         type="checkbox" 
-                        ${task.Status === 'done' ? 'checked' : ''}
-                        onchange="app.toggleTask('${task.ID}')"
+                        ${taskStatus === 'done' ? 'checked' : ''}
+                        onchange="window.app.toggleTask('${taskId}')"
                         class="task-checkbox"
                     >
                     <div class="task-text">
-                        <span>${this.escapeHtml(task.Title)}</span>
+                        <span>${this.escapeHtml(taskTitle)}</span>
                         ${task.Body ? `<p>${this.escapeHtml(task.Body)}</p>` : ''}
                         <div class="task-meta">
-                            <span class="priority-badge ${this.getPriorityClass(task.Priority)}">
-                                ${this.getPriorityLabel(task.Priority)}
+                            <span class="priority-badge ${this.getPriorityClass(taskPriority)}">
+                                ${this.getPriorityLabel(taskPriority)}
                             </span>
-                            <span class="task-status">${this.getStatusLabel(task.Status)}</span>
+                            <span class="task-status">${this.getStatusLabel(taskStatus)}</span>
                             ${task.Deadline ? `
                                 <span class="due-date">
                                     📅 ${this.formatDate(task.Deadline)}
                                 </span>
                             ` : ''}
                             <span class="created-date">
-                                Создано: ${this.formatDate(task.CreatedAt)}
+                                Создано: ${this.formatDate(createdAt)}
                             </span>
                         </div>
                     </div>
                 </div>
                 <button 
                     class="delete-btn" 
-                    onclick="app.showDeleteModal(${this.escapeHtml(JSON.stringify(task))})"
+                    onclick="window.app.showDeleteModal(${this.escapeHtml(JSON.stringify(task))})"
                     title="Удалить задачу"
                 >
                     🗑️
                 </button>
             </div>
-        `).join('');
+            `;
+        }).join('');
+
+        // Re-bind events after rendering
+        this.bindTaskEvents();
+    }
+
+    bindTaskEvents() {
+        // Add event listeners to checkboxes and delete buttons
+        const checkboxes = this.tasksContainer.querySelectorAll('.task-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const taskId = e.target.getAttribute('data-task-id');
+                if (taskId) {
+                    this.toggleTask(taskId);
+                }
+            });
+        });
+
+        const deleteButtons = this.tasksContainer.querySelectorAll('.delete-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const taskData = e.target.getAttribute('data-task');
+                if (taskData) {
+                    try {
+                        const task = JSON.parse(taskData);
+                        this.showDeleteModal(task);
+                    } catch (error) {
+                        console.error('Error parsing task data:', error);
+                    }
+                }
+            });
+        });
     }
 
     isOverdue(task) {
@@ -263,14 +323,19 @@ class TodoApp {
 
     formatDate(dateString) {
         if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ru-RU', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error, dateString);
+            return 'Неверная дата';
+        }
     }
 }
 

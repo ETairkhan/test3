@@ -67,15 +67,20 @@ func (a *App) CreateTask(task model.Task) error {
 }
 
 func (a *App) GetTasks() ([]model.Task, error) {
-	log := a.log.With("method", "GetTasks")
+    log := a.log.With("method", "GetTasks")
 
-	tasks, err := a.taskService.GetTasks(a.ctx)
-	if err != nil {
-		log.Error("cannot create task", "error", err)
-		return []model.Task{}, err
-	}
+    tasks, err := a.taskService.GetTasks(a.ctx)
+    if err != nil {
+        log.Error("cannot get tasks", "error", err)
+        return []model.Task{}, err
+    }
 
-	return tasks, nil
+    log.Info("retrieved tasks", "count", len(tasks))
+    for i, task := range tasks {
+        log.Debug("task", "index", i, "id", task.ID, "title", task.Title, "status", task.Status)
+    }
+
+    return tasks, nil
 }
 
 func (a *App) UpdateTaskStatus(id string, status string) error {
