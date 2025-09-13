@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"time"
 	"todo-app/internal/adapter/postgres"
+	"todo-app/internal/app/service"
 	"todo-app/internal/config"
 	"todo-app/internal/domain/model"
-	"todo-app/internal/app/service"
+
+	"github.com/google/uuid"
 )
 
 // App struct
@@ -49,13 +51,19 @@ func (a *App) CreateTask(task model.Task) error {
 	log := a.log.With("method", "CreateTask")
 	ctx, cancel := context.WithTimeout(a.ctx, time.Second*5)
 	defer cancel()
+
+	// Ensure the task has an ID
+	if task.ID == uuid.Nil {
+		task.ID = uuid.New()
+	}
+
 	err := a.taskService.Create(ctx, task)
 	if err != nil {
 		log.Error("cannot create task", "error", err)
 		return err
 	}
 	log.Info("task succesfull created")
-	return err
+	return nil
 }
 
 func (a *App) GetTasks() ([]model.Task, error) {

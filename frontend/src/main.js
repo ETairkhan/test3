@@ -16,7 +16,8 @@ class TodoApp {
         // Форма добавления задач
         this.taskInput = document.getElementById('taskInput');
         this.prioritySelect = document.getElementById('prioritySelect');
-        this.dueDateInput = document.getElementById('dueDateInput');
+        this.startDateInput = document.getElementById('startDateInput');
+        this.endDateInput = document.getElementById('endDateInput');
         this.addTaskBtn = document.getElementById('addTaskBtn');
         
         // Элементы управления
@@ -65,7 +66,7 @@ class TodoApp {
 
     async loadTasks() {
         try {
-            this.tasks = await window.go.main.App.GetTasks(this.currentFilter, this.currentSort);
+            this.tasks = await window.go.main.App.GetTasks();
             this.renderTasks();
         } catch (error) {
             console.error('Ошибка загрузки задач:', error);
@@ -73,20 +74,35 @@ class TodoApp {
     }
 
     async addTask() {
-        const text = this.taskInput.value.trim();
-        if (!text) return;
+        const title = this.taskInput.value.trim();
+        if (!title) return;
 
         try {
-            const priority = this.prioritySelect.value;
-            const dueDate = this.dueDateInput.value ? new Date(this.dueDateInput.value).toISOString() : "";
-            const task = await window.go.main.App.AddTask(text, priority, dueDate);
+            // Convert priority from string to int
+            let priority = 2; // default medium
+            switch (this.prioritySelect.value) {
+                case 'low': priority = 1; break;
+                case 'medium': priority = 2; break;
+                case 'high': priority = 3; break;
+            }
+
+            const task = {
+                Title: title,
+                Body: "",
+                Priority: priority,
+                Status: "not_started",
+                Deadline: null
+            };
+
+            await window.go.main.App.CreateTask(task);
             
-            this.tasks.unshift(task);
-            this.renderTasks();
+            // Reload tasks to get the updated list with IDs
+            await this.loadTasks();
             
             // Сброс формы
             this.taskInput.value = '';
-            this.dueDateInput.value = '';
+            this.startDateInput.value = '';
+            this.endDateInput.value = '';
             this.prioritySelect.value = 'medium';
             
         } catch (error) {
@@ -97,8 +113,19 @@ class TodoApp {
 
     async toggleTask(id) {
         try {
-            await window.go.main.App.ToggleTask(id);
-            await this.loadTasks();
+            // Find the current task to determine new status
+            const task = this.tasks.find(t => t.ID === id);
+            if (!task) return;
+
+            let newStatus;
+            if (task.Status === 'done') {
+                newStatus = 'not_started';
+            } else {
+                newStatus = 'done';
+            }
+
+            await window.go.main.App.UpdateTaskStatus(id, newStatus);
+            await this.loadTasks(); // Reload tasks to get updated status
         } catch (error) {
             console.error('Ошибка обновления задачи:', error);
         }
@@ -106,7 +133,7 @@ class TodoApp {
 
     showDeleteModal(task) {
         this.taskToDelete = task;
-        this.deleteModalText.textContent = `Вы уверены, что хотите удалить задачу "${task.text}"?`;
+        this.deleteModalText.textContent = `Вы уверены, что хотите удалить задачу "${task.Title}"?`;
         this.deleteModal.style.display = 'flex';
     }
 
@@ -119,9 +146,8 @@ class TodoApp {
         if (!this.taskToDelete) return;
 
         try {
-            await window.go.main.App.DeleteTask(this.taskToDelete.id);
-            this.tasks = this.tasks.filter(t => t.id !== this.taskToDelete.id);
-            this.renderTasks();
+            await window.go.main.App.DeleteTask(this.taskToDelete.ID);
+            await this.loadTasks(); // Reload tasks after deletion
             this.hideDeleteModal();
         } catch (error) {
             console.error('Ошибка удаления задачи:', error);
@@ -137,6 +163,7 @@ class TodoApp {
             btn.classList.toggle('active', btn.dataset.filter === filter);
         });
         
+        // For now, just reload all tasks - you can implement filtering later
         this.loadTasks();
     }
 
@@ -155,31 +182,36 @@ class TodoApp {
     }
 
     renderTasks() {
-        if (this.tasks.length === 0) {
+        if (!this.tasks || this.tasks.length === 0) {
             this.tasksContainer.innerHTML = '<div class="empty-state">Нет задач для отображения</div>';
             return;
         }
 
         this.tasksContainer.innerHTML = this.tasks.map(task => `
-            <div class="task-item ${task.completed ? 'completed' : ''}">
+            <div class="task-item ${task.Status === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
                 <div class="task-content">
                     <input 
                         type="checkbox" 
-                        ${task.completed ? 'checked' : ''}
-                        onchange="app.toggleTask('${task.id}')"
+                        ${task.Status === 'done' ? 'checked' : ''}
+                        onchange="app.toggleTask('${task.ID}')"
                         class="task-checkbox"
                     >
                     <div class="task-text">
-                        <span>${this.escapeHtml(task.text)}</span>
+                        <span>${this.escapeHtml(task.Title)}</span>
+                        ${task.Body ? `<p>${this.escapeHtml(task.Body)}</p>` : ''}
                         <div class="task-meta">
-                            <span class="priority-badge ${task.priority}">
-                                ${this.getPriorityLabel(task.priority)}
+                            <span class="priority-badge ${this.getPriorityClass(task.Priority)}">
+                                ${this.getPriorityLabel(task.Priority)}
                             </span>
-                            ${task.dueDate && new Date(task.dueDate).getTime() > 0 ? `
+                            <span class="task-status">${this.getStatusLabel(task.Status)}</span>
+                            ${task.Deadline ? `
                                 <span class="due-date">
-                                    📅 ${this.formatDate(task.dueDate)}
+                                    📅 ${this.formatDate(task.Deadline)}
                                 </span>
                             ` : ''}
+                            <span class="created-date">
+                                Создано: ${this.formatDate(task.CreatedAt)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -194,22 +226,43 @@ class TodoApp {
         `).join('');
     }
 
+    isOverdue(task) {
+        if (!task.Deadline || task.Status === 'done') return false;
+        const now = new Date();
+        const deadline = new Date(task.Deadline);
+        return deadline < now;
+    }
+
+    getPriorityClass(priority) {
+        if (priority >= 3) return 'high';
+        if (priority >= 2) return 'medium';
+        return 'low';
+    }
+
+    getPriorityLabel(priority) {
+        if (priority >= 3) return 'Высокий';
+        if (priority >= 2) return 'Средний';
+        return 'Низкий';
+    }
+
+    getStatusLabel(status) {
+        const statusLabels = {
+            'not_started': 'Не начата',
+            'in_progress': 'В процессе',
+            'done': 'Завершена'
+        };
+        return statusLabels[status] || status;
+    }
+
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    getPriorityLabel(priority) {
-        const labels = {
-            low: 'Низкий',
-            medium: 'Средний',
-            high: 'Высокий'
-        };
-        return labels[priority] || priority;
-    }
-
     formatDate(dateString) {
+        if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU', {
             day: '2-digit',
