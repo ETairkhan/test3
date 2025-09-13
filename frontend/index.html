@@ -22,6 +22,12 @@
                     placeholder="Добавьте новую задачу..." 
                     class="task-input"
                 >
+                <textarea 
+                    id="taskDescInput" 
+                    placeholder="Описание задачи (необязательно)" 
+                    class="task-desc-input"
+                    rows="2"
+                ></textarea>
                 <div class="task-options">
                     <select id="prioritySelect" class="priority-select">
                         <option value="low">Низкий</option>
@@ -64,8 +70,10 @@
                 </div>
                 <div class="sorts">
                     <select id="sortSelect" class="sort-select">
-                        <option value="date" selected>По дате</option>
-                        <option value="priority">По приоритету</option>
+                        <option value="date-desc" selected>По дате (новые сверху)</option>
+                        <option value="date-asc">По дате (старые сверху)</option>
+                        <option value="priority-desc">По приоритету (высокие сверху)</option>
+                        <option value="priority-asc">По приоритету (низкие сверху)</option>
                     </select>
                 </div>
             </div>

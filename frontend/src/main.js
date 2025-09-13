@@ -1,4 +1,16 @@
 class TodoApp {
+    async startTask(id) {
+        try {
+            if (!id || id.length === 0) {
+                throw new Error('Invalid task ID');
+            }
+            await window.go.main.App.UpdateTaskStatus(id, 'in_progress');
+            await this.loadTasks();
+        } catch (error) {
+            console.error('Ошибка начала задачи:', error);
+            alert('Не удалось начать задачу: ' + error.message);
+        }
+    }
     constructor() {
         this.tasks = [];
         this.currentFilter = 'all';
@@ -16,6 +28,7 @@ class TodoApp {
         // Форма добавления задач
         this.taskInput = document.getElementById('taskInput');
         this.prioritySelect = document.getElementById('prioritySelect');
+        this.taskDescInput = document.getElementById('taskDescInput');
         this.startDateInput = document.getElementById('startDateInput');
         this.endDateInput = document.getElementById('endDateInput');
         this.addTaskBtn = document.getElementById('addTaskBtn');
@@ -76,6 +89,7 @@ class TodoApp {
 
     async addTask() {
         const title = this.taskInput.value.trim();
+        const desc = this.taskDescInput.value.trim();
         if (!title) return;
 
         try {
@@ -96,7 +110,7 @@ class TodoApp {
             const task = {
                 ID: this.generateUUID(), 
                 Title: title,
-                Body: "",
+                Body: desc,
                 Priority: priority,
                 Status: "not_started",
                 CreatedAt: new Date().toISOString(),
@@ -113,6 +127,7 @@ class TodoApp {
             
             // Сброс формы
             this.taskInput.value = '';
+            this.taskDescInput.value = '';
             this.startDateInput.value = '';
             this.endDateInput.value = '';
             this.prioritySelect.value = 'medium';
@@ -126,32 +141,28 @@ class TodoApp {
     async toggleTask(id) {
         try {
             console.log('Toggling task:', id);
-            
             if (!id || id.length === 0) {
                 throw new Error('Invalid task ID');
             }
-
             // Find the current task to determine new status
             const task = this.tasks.find(t => {
                 const taskId = t.ID || t.id || '';
                 return taskId === id;
             });
-            
             if (!task) {
                 console.error('Task not found:', id);
                 return;
             }
-
             let newStatus;
             const currentStatus = task.Status || task.status;
             if (currentStatus === 'done') {
                 newStatus = 'not_started';
+            } else if (currentStatus === 'in_progress') {
+                newStatus = 'done';
             } else {
                 newStatus = 'done';
             }
-
             console.log('Updating status:', id, '->', newStatus);
-            
             await window.go.main.App.UpdateTaskStatus(id, newStatus);
             await this.loadTasks();
         } catch (error) {
@@ -239,7 +250,7 @@ class TodoApp {
 
         switch (this.currentFilter) {
             case 'active':
-                filteredTasks = this.tasks.filter(task => (task.Status || task.status) !== 'done');
+                filteredTasks = this.tasks.filter(task => (task.Status || task.status) === 'in_progress');
                 break;
             case 'completed':
                 filteredTasks = this.tasks.filter(task => (task.Status || task.status) === 'done');
@@ -281,7 +292,32 @@ class TodoApp {
 
         console.log('Rendering tasks:', filteredTasks);
 
-        this.tasksContainer.innerHTML = filteredTasks.map(task => {
+        // Сортировка задач
+        let sortedTasks = [...filteredTasks];
+        switch (this.currentSort) {
+            case 'priority-asc':
+                sortedTasks.sort((a, b) => (a.Priority || a.priority || 0) - (b.Priority || b.priority || 0));
+                break;
+            case 'priority-desc':
+                sortedTasks.sort((a, b) => (b.Priority || b.priority || 0) - (a.Priority || a.priority || 0));
+                break;
+            case 'date-asc':
+                sortedTasks.sort((a, b) => {
+                    const aDate = new Date(a.CreatedAt || a.created_at || a.createdAt || 0);
+                    const bDate = new Date(b.CreatedAt || b.created_at || b.createdAt || 0);
+                    return aDate - bDate;
+                });
+                break;
+            case 'date-desc':
+            default:
+                sortedTasks.sort((a, b) => {
+                    const aDate = new Date(a.CreatedAt || a.created_at || a.createdAt || 0);
+                    const bDate = new Date(b.CreatedAt || b.created_at || b.createdAt || 0);
+                    return bDate - aDate;
+                });
+        }
+
+        this.tasksContainer.innerHTML = sortedTasks.map(task => {
             // Ensure we have valid data
             const taskId = task.ID || task.id || '';
             const taskTitle = task.Title || task.title || 'Без названия';
@@ -289,6 +325,19 @@ class TodoApp {
             const taskPriority = task.Priority || task.priority || 2;
             const createdAt = task.CreatedAt || task.created_at || task.createdAt || new Date().toISOString();
             const deadline = task.Deadline || task.deadline;
+            // Красивые статусы
+            let statusHtml = '';
+            if (taskStatus === 'not_started') {
+                statusHtml = '<span class="task-status status-not-started">⏳ Не начата</span>';
+            } else if (taskStatus === 'in_progress') {
+                statusHtml = '<span class="task-status status-in-progress">🚀 В процессе</span>';
+            } else if (taskStatus === 'done') {
+                statusHtml = '<span class="task-status status-done">✅ Завершена</span>';
+            } else {
+                statusHtml = `<span class="task-status">${this.getStatusLabel(taskStatus)}</span>`;
+            }
+            // Красивая кнопка "Начать"
+            const startBtnHtml = taskStatus === 'not_started' ? `<button class="start-btn fancy-start-btn" data-task-id="${taskId}">▶️ Начать</button>` : '';
             return `
             <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
                 <div class="task-content">
@@ -297,15 +346,16 @@ class TodoApp {
                         ${taskStatus === 'done' ? 'checked' : ''}
                         data-task-id="${taskId}"
                         class="task-checkbox"
+                        ${taskStatus === 'not_started' ? 'disabled' : ''}
                     >
                     <div class="task-text">
                         <span>${this.escapeHtml(taskTitle)}</span>
-                        ${task.Body || task.body ? `<p>${this.escapeHtml(task.Body || task.body)}</p>` : ''}
+                        ${task.Body || task.body ? `<p class="task-desc">${this.escapeHtml(task.Body || task.body)}</p>` : ''}
                         <div class="task-meta">
                             <span class="priority-badge ${this.getPriorityClass(taskPriority)}">
                                 ${this.getPriorityLabel(taskPriority)}
                             </span>
-                            <span class="task-status">${this.getStatusLabel(taskStatus)}</span>
+                            ${statusHtml}
                             ${deadline ? `
                                 <span class="due-date">
                                    Дедлайн: 📅 ${this.formatDate(deadline)}
@@ -315,6 +365,7 @@ class TodoApp {
                                 Создано: ${this.formatDate(createdAt)}
                             </span>
                         </div>
+                        ${startBtnHtml}
                     </div>
                 </div>
                 <button 
@@ -327,6 +378,16 @@ class TodoApp {
             </div>
             `;
         }).join('');
+        // Привязка событий к кнопкам "Начать"
+        const startBtns = this.tasksContainer.querySelectorAll('.start-btn');
+        startBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const taskId = e.target.getAttribute('data-task-id');
+                if (taskId && taskId.length > 0) {
+                    this.startTask(taskId);
+                }
+            });
+        });
 
         // Re-bind events after rendering
         this.bindTaskEvents();
@@ -420,6 +481,7 @@ class TodoApp {
     }
 
     getStatusLabel(status) {
+        // Не используется, но оставим для совместимости
         const statusLabels = {
             'not_started': 'Не начата',
             'in_progress': 'В процессе',
@@ -427,6 +489,7 @@ class TodoApp {
         };
         return statusLabels[status] || status;
     }
+
 
     escapeHtml(text) {
         if (!text) return '';
