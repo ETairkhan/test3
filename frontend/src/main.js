@@ -338,6 +338,8 @@ class TodoApp {
             }
             // Красивая кнопка "Начать"
             const startBtnHtml = taskStatus === 'not_started' ? `<button class="start-btn fancy-start-btn" data-task-id="${taskId}">▶️ Начать</button>` : '';
+            // Добавляем класс 'done' для зачёркивания
+            const doneClass = taskStatus === 'done' ? 'done' : '';
             return `
             <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
                 <div class="task-content">
@@ -349,9 +351,9 @@ class TodoApp {
                         ${taskStatus === 'not_started' ? 'disabled' : ''}
                     >
                     <div class="task-text">
-                        <span>${this.escapeHtml(taskTitle)}</span>
-                        ${task.Body || task.body ? `<p class="task-desc">${this.escapeHtml(task.Body || task.body)}</p>` : ''}
-                        <div class="task-meta">
+                        <span class="${doneClass}">${this.escapeHtml(taskTitle)}</span>
+                        ${task.Body || task.body ? `<p class="task-desc ${doneClass}">${this.escapeHtml(task.Body || task.body)}</p>` : ''}
+                        <div class="task-meta ${doneClass}">
                             <span class="priority-badge ${this.getPriorityClass(taskPriority)}">
                                 ${this.getPriorityLabel(taskPriority)}
                             </span>
