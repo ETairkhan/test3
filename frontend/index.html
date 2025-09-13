@@ -1,12 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>helloworld</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List App</title>
+    <link rel="stylesheet" href="./src/style.css">
+    <script src="./src/main.js" defer></script>
 </head>
 <body>
-<div id="app"></div>
-<script src="./src/main.js" type="module"></script>
+    <div class="app" id="app">
+        <div class="container">
+            <header class="header">
+                <h1>To-Do List</h1>
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+            </header>
+
+            <div class="task-form">
+                <input 
+                    type="text" 
+                    id="taskInput" 
+                    placeholder="Добавьте новую задачу..." 
+                    class="task-input"
+                >
+                <div class="task-options">
+                    <select id="prioritySelect" class="priority-select">
+                        <option value="low">Низкий</option>
+                        <option value="medium" selected>Средний</option>
+                        <option value="high">Высокий</option>
+                    </select>
+                    <input 
+                        type="datetime-local" 
+                        id="dueDateInput" 
+                        class="due-date-input"
+                    >
+                    <button id="addTaskBtn" class="add-btn">Добавить</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">Все</button>
+                    <button class="filter-btn" data-filter="active">Активные</button>
+                    <button class="filter-btn" data-filter="completed">Выполненные</button>
+                    <button class="filter-btn" data-filter="today">Сегодня</button>
+                    <button class="filter-btn" data-filter="week">На неделе</button>
+                    <button class="filter-btn" data-filter="overdue">Просроченные</button>
+                </div>
+                <div class="sorts">
+                    <select id="sortSelect" class="sort-select">
+                        <option value="date" selected>По дате</option>
+                        <option value="priority">По приоритету</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tasks" id="tasksContainer">
+                <!-- Задачи будут добавляться здесь -->
+            </div>
+        </div>
+
+        <!-- Модальное окно подтверждения удаления -->
+        <div class="modal-overlay" id="deleteModal" style="display: none;">
+            <div class="modal">
+                <h3>Подтверждение удаления</h3>
+                <p id="deleteModalText">Вы уверены, что хотите удалить эту задачу?</p>
+                <div class="modal-actions">
+                    <button id="cancelDeleteBtn" class="cancel-btn">Отмена</button>
+                    <button id="confirmDeleteBtn" class="confirm-btn">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
