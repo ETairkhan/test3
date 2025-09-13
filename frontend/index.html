@@ -15,7 +15,7 @@
                 <button class="theme-toggle" id="themeToggle">🌙</button>
             </header>
 
-            <div class="task-form">
+           <div class="task-form">
                 <input 
                     type="text" 
                     id="taskInput" 
@@ -28,11 +28,27 @@
                         <option value="medium" selected>Средний</option>
                         <option value="high">Высокий</option>
                     </select>
-                    <input 
-                        type="datetime-local" 
-                        id="dueDateInput" 
-                        class="due-date-input"
-                    >
+                    
+                    <!-- Поля для интервала выполнения -->
+                    <div class="date-range">
+                        <div class="date-input-group">
+                            <label for="startDateInput">Начало:</label>
+                            <input 
+                                type="datetime-local" 
+                                id="startDateInput" 
+                                class="date-input"
+                            >
+                        </div>
+                        <div class="date-input-group">
+                            <label for="endDateInput">Дедлайн:</label>
+                            <input 
+                                type="datetime-local" 
+                                id="endDateInput" 
+                                class="date-input"
+                            >
+                        </div>
+                    </div>
+                    
                     <button id="addTaskBtn" class="add-btn">Добавить</button>
                 </div>
             </div>

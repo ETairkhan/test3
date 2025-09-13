@@ -404,3 +404,245 @@ body {
         width: 100%;
     }
 }
+
+/* Стили для группы дат в форме */
+.date-range {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.date-input-group label {
+    font-size: 0.8rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.date-input {
+    padding: 8px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--task-bg);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+/* Стили для отображения интервала в задачах */
+.date-interval {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.date-separator {
+    color: var(--completed-color);
+    margin: 0 5px;
+}
+
+.date-item {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.date-item.start {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.date-item.end {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* Статусы интервала */
+.interval-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.interval-status.not-started {
+    background-color: rgba(158, 158, 158, 0.1);
+    color: #9e9e9e;
+    border: 1px solid rgba(158, 158, 158, 0.3);
+}
+
+.interval-status.in-progress {
+    background-color: rgba(33, 150, 243, 0.1);
+    color: #2196f3;
+    border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.interval-status.completed {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4caf50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.interval-status.overdue {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.interval-status.no-dates {
+    background-color: rgba(158, 158, 158, 0.1);
+    color: #9e9e9e;
+    border: 1px solid rgba(158, 158, 158, 0.3);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* Стили для темной темы */
+[data-theme="dark"] .date-item.start {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.5);
+}
+
+[data-theme="dark"] .date-item.end {
+    background-color: rgba(244, 67, 54, 0.2);
+    border-color: rgba(244, 67, 54, 0.5);
+}
+
+[data-theme="dark"] .interval-status.not-started {
+    background-color: rgba(158, 158, 158, 0.2);
+    border-color: rgba(158, 158, 158, 0.5);
+}
+
+[data-theme="dark"] .interval-status.in-progress {
+    background-color: rgba(33, 150, 243, 0.2);
+    border-color: rgba(33, 150, 243, 0.5);
+}
+
+[data-theme="dark"] .interval-status.completed {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-color: rgba(76, 175, 80, 0.5);
+}
+
+[data-theme="dark"] .interval-status.overdue {
+    background-color: rgba(244, 67, 54, 0.2);
+    border-color: rgba(244, 67, 54, 0.5);
+}
+
+[data-theme="dark"] .interval-status.no-dates {
+    background-color: rgba(158, 158, 158, 0.2);
+    border-color: rgba(158, 158, 158, 0.5);
+}
+
+/* Стили для просроченных задач */
+.task-item.overdue {
+    border-left: 4px solid #f44336;
+    background-color: rgba(244, 67, 54, 0.05);
+}
+
+[data-theme="dark"] .task-item.overdue {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.task-item.overdue .task-text span {
+    color: #f44336 !important;
+}
+
+/* Анимация для предупреждения о просрочке */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.task-item.overdue {
+    animation: pulse 2s infinite;
+}
+
+/* Адаптивность для группы дат */
+@media (max-width: 768px) {
+    .date-range {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .date-input-group {
+        width: 100%;
+    }
+    
+    .date-interval {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .date-separator {
+        display: none;
+    }
+}
+
+/* Дополнительные стили для мета-информации */
+.task-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.task-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+/* Улучшенные стили для приоритета и дат */
+.priority-badge {
+    order: 1;
+}
+
+.task-dates {
+    order: 2;
+}
+
+.interval-status {
+    order: 3;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 480px) {
+    .date-input {
+        font-size: 0.8rem;
+        padding: 6px;
+    }
+    
+    .date-item {
+        font-size: 0.8rem;
+        padding: 3px 6px;
+    }
+    
+    .interval-status {
+        font-size: 0.75rem;
+        padding: 3px 6px;
+    }
+    
+    .task-meta {
+        gap: 6px;
+    }
+}
