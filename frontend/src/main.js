@@ -94,11 +94,14 @@ class TodoApp {
             }
 
             const task = {
+                ID: this.generateUUID(), 
                 Title: title,
                 Body: "",
                 Priority: priority,
                 Status: "not_started",
-                Deadline: deadline
+                CreatedAt: new Date().toISOString(),
+                Deadline: deadline,
+                Done: false
             };
 
             console.log('Creating task:', task); // Debug log
@@ -124,8 +127,16 @@ class TodoApp {
         try {
             console.log('Toggling task:', id);
             
+            if (!id || id.length === 0) {
+                throw new Error('Invalid task ID');
+            }
+
             // Find the current task to determine new status
-            const task = this.tasks.find(t => t.ID === id || t.id === id);
+            const task = this.tasks.find(t => {
+                const taskId = t.ID || t.id || '';
+                return taskId === id;
+            });
+            
             if (!task) {
                 console.error('Task not found:', id);
                 return;
@@ -151,7 +162,7 @@ class TodoApp {
 
     showDeleteModal(task) {
         this.taskToDelete = task;
-        this.deleteModalText.textContent = `Вы уверены, что хотите удалить задачу "${task.Title}"?`;
+        this.deleteModalText.textContent = `Вы уверены, что хотите удалить задачу "${task.Title || 'Без названия'}"?`;
         this.deleteModal.style.display = 'flex';
     }
 
@@ -164,13 +175,19 @@ class TodoApp {
         if (!this.taskToDelete) return;
 
         try {
-            console.log('Deleting task:', this.taskToDelete.ID); // Debug log
-            await window.go.main.App.DeleteTask(this.taskToDelete.ID);
+            console.log('Deleting task:', this.taskToDelete);
+            // Make sure we have the correct ID field
+            const taskId = this.taskToDelete.ID || this.taskToDelete.id;
+            if (!taskId || taskId.length === 0) {
+                throw new Error('Invalid task ID');
+            }
+            
+            await window.go.main.App.DeleteTask(taskId);
             await this.loadTasks(); // Reload tasks after deletion
             this.hideDeleteModal();
         } catch (error) {
             console.error('Ошибка удаления задачи:', error);
-            alert('Не удалось удалить задачу: ' + error.message);
+            alert('Не удалось удалить задачу: ' + (error.message || 'Unknown error'));
         }
     }
 
@@ -200,13 +217,15 @@ class TodoApp {
         this.themeToggle.textContent = savedTheme === 'light' ? '🌙' : '☀️';
     }
 
+
+
     renderTasks() {
         if (!this.tasks || this.tasks.length === 0) {
             this.tasksContainer.innerHTML = '<div class="empty-state">Нет задач для отображения</div>';
             return;
         }
 
-        console.log('Rendering tasks:', this.tasks); // Debug log
+        console.log('Rendering tasks:', this.tasks);
 
         this.tasksContainer.innerHTML = this.tasks.map(task => {
             // Ensure we have valid data
@@ -215,7 +234,7 @@ class TodoApp {
             const taskStatus = task.Status || task.status || 'not_started';
             const taskPriority = task.Priority || task.priority || 2;
             const createdAt = task.CreatedAt || task.created_at || task.createdAt || new Date().toISOString();
-            const deadline = task.Deadline || task.deadline
+            const deadline = task.Deadline || task.deadline;
             
             return `
             <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
@@ -223,12 +242,12 @@ class TodoApp {
                     <input 
                         type="checkbox" 
                         ${taskStatus === 'done' ? 'checked' : ''}
-                        onchange="window.app.toggleTask('${taskId}')"
+                        data-task-id="${taskId}"
                         class="task-checkbox"
                     >
                     <div class="task-text">
                         <span>${this.escapeHtml(taskTitle)}</span>
-                        ${task.Body ? `<p>${this.escapeHtml(task.Body || task.body)}</p>` : ''}
+                        ${task.Body || task.body ? `<p>${this.escapeHtml(task.Body || task.body)}</p>` : ''}
                         <div class="task-meta">
                             <span class="priority-badge ${this.getPriorityClass(taskPriority)}">
                                 ${this.getPriorityLabel(taskPriority)}
@@ -247,7 +266,7 @@ class TodoApp {
                 </div>
                 <button 
                     class="delete-btn" 
-                    onclick="window.app.showDeleteModal(${this.escapeHtml(JSON.stringify(task))})"
+                    data-task-id="${taskId}"
                     title="Удалить задачу"
                 >
                     🗑️
@@ -259,33 +278,73 @@ class TodoApp {
         // Re-bind events after rendering
         this.bindTaskEvents();
     }
-
+     // Add this helper method to generate UUIDs
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
     bindTaskEvents() {
-        // Add event listeners to checkboxes and delete buttons
+        // Add event listeners to checkboxes
         const checkboxes = this.tasksContainer.querySelectorAll('.task-checkbox');
         checkboxes.forEach(checkbox => {
+            // Remove any existing event listener first to avoid duplicates
+            checkbox.replaceWith(checkbox.cloneNode(true));
+        });
+
+        // Re-select checkboxes after cloning
+        const newCheckboxes = this.tasksContainer.querySelectorAll('.task-checkbox');
+        newCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const taskId = e.target.getAttribute('data-task-id');
-                if (taskId) {
+                console.log('Checkbox changed for task:', taskId);
+                if (taskId && taskId.length > 0) {
                     this.toggleTask(taskId);
+                } else {
+                    console.error('Invalid task ID:', taskId);
                 }
             });
         });
 
+        // Add event listeners to delete buttons
         const deleteButtons = this.tasksContainer.querySelectorAll('.delete-btn');
         deleteButtons.forEach(button => {
+            // Remove any existing event listener first to avoid duplicates
+            button.replaceWith(button.cloneNode(true));
+        });
+
+        // Re-select delete buttons after cloning
+        const newDeleteButtons = this.tasksContainer.querySelectorAll('.delete-btn');
+        newDeleteButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const taskData = e.target.getAttribute('data-task');
-                if (taskData) {
-                    try {
-                        const task = JSON.parse(taskData);
-                        this.showDeleteModal(task);
-                    } catch (error) {
-                        console.error('Error parsing task data:', error);
-                    }
+                const taskId = e.target.getAttribute('data-task-id');
+                console.log('Delete button clicked for task:', taskId);
+                if (taskId && taskId.length > 0) {
+                    this.showDeleteModalById(taskId);
+                } else {
+                    console.error('Invalid task ID for deletion:', taskId);
                 }
             });
         });
+    }
+
+    showDeleteModalById(taskId) {
+        console.log('Looking for task with ID:', taskId);
+        const task = this.tasks.find(t => {
+            const id1 = t.ID || t.id || '';
+            console.log('Comparing:', id1, 'with', taskId);
+            return id1 === taskId;
+        });
+        
+        if (task) {
+            console.log('Found task:', task);
+            this.showDeleteModal(task);
+        } else {
+            console.error('Task not found with ID:', taskId, 'Available tasks:', this.tasks);
+            alert('Задача не найдена');
+        }
     }
 
     isOverdue(task) {
@@ -341,14 +400,9 @@ class TodoApp {
     }
 }
 
+
 // Инициализация приложения
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new TodoApp();
 });
-
-// Глобальные функции для обработки событий в HTML
-window.app = {
-    toggleTask: (id) => app.toggleTask(id),
-    showDeleteModal: (task) => app.showDeleteModal(task)
-};

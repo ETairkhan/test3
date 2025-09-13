@@ -97,7 +97,12 @@ func (a *App) UpdateTaskStatus(id string, status string) error {
 
 func (a *App) DeleteTask(id string) error {
 	log := a.log.With("method", "UpdateTaskStatus")
-
+	log.Info("Deleting task", "id", id) 
+    
+    if id == "" {
+        return fmt.Errorf("empty task ID")
+    }
+    
 	err := a.taskService.DeleteTask(a.ctx, id)
 	if err != nil {
 		log.Error("cannot delete task", "error", err)
