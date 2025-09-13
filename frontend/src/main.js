@@ -225,9 +225,63 @@ class TodoApp {
             return;
         }
 
-        console.log('Rendering tasks:', this.tasks);
+        // Фильтрация задач по текущему фильтру
+        let filteredTasks = this.tasks;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-        this.tasksContainer.innerHTML = this.tasks.map(task => {
+    // Неделя: с сегодняшнего дня до конца воскресенья
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // endOfWeek: ближайшее воскресенье, 23:59:59.999
+    const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (7 - now.getDay()));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+        switch (this.currentFilter) {
+            case 'active':
+                filteredTasks = this.tasks.filter(task => (task.Status || task.status) !== 'done');
+                break;
+            case 'completed':
+                filteredTasks = this.tasks.filter(task => (task.Status || task.status) === 'done');
+                break;
+            case 'today':
+                filteredTasks = this.tasks.filter(task => {
+                    const deadlineStr = task.Deadline || task.deadline;
+                    if (!deadlineStr) return false;
+                    const deadline = new Date(deadlineStr);
+                    return deadline >= startOfToday && deadline < endOfToday;
+                });
+                break;
+            case 'week':
+                filteredTasks = this.tasks.filter(task => {
+                    const deadlineStr = task.Deadline || task.deadline;
+                    if (!deadlineStr) return false;
+                    const deadline = new Date(deadlineStr);
+                    return deadline >= startOfToday && deadline <= endOfWeek;
+                });
+                break;
+            case 'overdue':
+                filteredTasks = this.tasks.filter(task => {
+                    const deadlineStr = task.Deadline || task.deadline;
+                    if (!deadlineStr) return false;
+                    const deadline = new Date(deadlineStr);
+                    return deadline < now && (task.Status || task.status) !== 'done';
+                });
+                break;
+            case 'all':
+            default:
+                // Все задачи
+                filteredTasks = this.tasks;
+        }
+
+        if (!filteredTasks || filteredTasks.length === 0) {
+            this.tasksContainer.innerHTML = '<div class="empty-state">Нет задач для отображения</div>';
+            return;
+        }
+
+        console.log('Rendering tasks:', filteredTasks);
+
+        this.tasksContainer.innerHTML = filteredTasks.map(task => {
             // Ensure we have valid data
             const taskId = task.ID || task.id || '';
             const taskTitle = task.Title || task.title || 'Без названия';
@@ -235,7 +289,6 @@ class TodoApp {
             const taskPriority = task.Priority || task.priority || 2;
             const createdAt = task.CreatedAt || task.created_at || task.createdAt || new Date().toISOString();
             const deadline = task.Deadline || task.deadline;
-            
             return `
             <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
                 <div class="task-content">
