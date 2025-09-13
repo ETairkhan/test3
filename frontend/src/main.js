@@ -122,26 +122,27 @@ class TodoApp {
 
     async toggleTask(id) {
         try {
-            console.log('Toggling task:', id); // Debug log
+            console.log('Toggling task:', id);
             
             // Find the current task to determine new status
-            const task = this.tasks.find(t => t.ID === id);
+            const task = this.tasks.find(t => t.ID === id || t.id === id);
             if (!task) {
                 console.error('Task not found:', id);
                 return;
             }
 
             let newStatus;
-            if (task.Status === 'done') {
+            const currentStatus = task.Status || task.status;
+            if (currentStatus === 'done') {
                 newStatus = 'not_started';
             } else {
                 newStatus = 'done';
             }
 
-            console.log('Updating status:', id, '->', newStatus); // Debug log
+            console.log('Updating status:', id, '->', newStatus);
             
             await window.go.main.App.UpdateTaskStatus(id, newStatus);
-            await this.loadTasks(); // Reload tasks to get updated status
+            await this.loadTasks();
         } catch (error) {
             console.error('Ошибка обновления задачи:', error);
             alert('Не удалось обновить задачу: ' + error.message);
@@ -209,11 +210,12 @@ class TodoApp {
 
         this.tasksContainer.innerHTML = this.tasks.map(task => {
             // Ensure we have valid data
-            const taskId = task.ID || '';
-            const taskTitle = task.Title || 'Без названия';
-            const taskStatus = task.Status || 'not_started';
-            const taskPriority = task.Priority || 2;
-            const createdAt = task.CreatedAt || new Date().toISOString();
+            const taskId = task.ID || task.id || '';
+            const taskTitle = task.Title || task.title || 'Без названия';
+            const taskStatus = task.Status || task.status || 'not_started';
+            const taskPriority = task.Priority || task.priority || 2;
+            const createdAt = task.CreatedAt || task.created_at || task.createdAt || new Date().toISOString();
+            const deadline = task.Deadline || task.deadline
             
             return `
             <div class="task-item ${taskStatus === 'done' ? 'completed' : ''} ${this.isOverdue(task) ? 'overdue' : ''}">
@@ -226,15 +228,15 @@ class TodoApp {
                     >
                     <div class="task-text">
                         <span>${this.escapeHtml(taskTitle)}</span>
-                        ${task.Body ? `<p>${this.escapeHtml(task.Body)}</p>` : ''}
+                        ${task.Body ? `<p>${this.escapeHtml(task.Body || task.body)}</p>` : ''}
                         <div class="task-meta">
                             <span class="priority-badge ${this.getPriorityClass(taskPriority)}">
                                 ${this.getPriorityLabel(taskPriority)}
                             </span>
                             <span class="task-status">${this.getStatusLabel(taskStatus)}</span>
-                            ${task.Deadline ? `
+                            ${deadline ? `
                                 <span class="due-date">
-                                    📅 ${this.formatDate(task.Deadline)}
+                                   Дедлайн: 📅 ${this.formatDate(deadline)}
                                 </span>
                             ` : ''}
                             <span class="created-date">
