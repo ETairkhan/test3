@@ -113,20 +113,20 @@ wails dev
 ## Example of working App
 
 как все должно работать, при удачных запуске
-<img src="./images/Image.png">
+<img src="./Images/Image.png">
 
 ---
 
 темная тема, для приятного посмотра:
-<img src="./images/image2.png">
+<img src="./Images/image2.png">
 
 метки по статусу и их дизайн
-<img src="./images/image3.png">
+<img src="./Images/image3.png">
 
 ---
 
 сортировка по приоритету
-<img src="./images/image4.png">
+<img src="./Images/image4.png">
 
 просрочные и тд.
-<img src="./images/image5.png">
+<img src="./Images/image5.png">
