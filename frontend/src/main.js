@@ -359,7 +359,7 @@ class TodoApp {
                         ${taskStatus === 'not_started' ? 'disabled' : ''}
                     >
                     <div class="task-text">
-                        <span class="${doneClass}">${this.escapeHtml(taskTitle)}</span>
+                            <span class="${doneClass} task-title">${this.escapeHtml(taskTitle)}</span>
                         ${task.Body || task.body ? `<p class="task-desc ${doneClass}">${this.escapeHtml(task.Body || task.body)}</p>` : ''}
                         <div class="task-meta ${doneClass}">
                             <span class="priority-badge ${this.getPriorityClass(taskPriority)}">

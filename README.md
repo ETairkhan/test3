@@ -4,6 +4,37 @@ Created by Yermek Tairkhan, Тестовое задания для DMARK
 
 ## Todo List App
 
+## How to run?
+
+### Clone repository
+
+```bash
+    git clone https://github.com/ETairkhan/test3.git
+    cd test3
+```
+
+### Copy config file
+
+Linux, Mingw64
+
+```bash
+cp config.example.yaml config.yaml
+```
+
+### Docker should run Postgres
+
+```bash
+docker-compose up --build 
+```
+
+Это запустить докер в фоновом режиме, а порт постргесс будет 5433
+
+### Running App
+
+```bash
+wails dev
+```
+
 Описание
 
 Кросс-платформенное desktop-приложение для управления списком задач, разработанное на Wails (Go + JavaScript). Приложение позволяет создавать, просматривать, фильтровать, сортировать, редактировать и удалять задачи. Все данные сохраняются в базе данных Postgres, состояние задач сохраняется между перезапусками приложения.
@@ -78,37 +109,6 @@ Created by Yermek Tairkhan, Тестовое задания для DMARK
 6. Тема
    - Поддержка светлой и тёмной темы.
    - Адаптивный интерфейс для разных размеров экранов.
-
-## How to run?
-
-### Clone repository
-
-```bash
-    git clone https://github.com/ETairkhan/test3.git
-    cd test3
-```
-
-### Copy config file
-
-Linux, Mingw64
-
-```bash
-cp config.example.yaml config.yaml
-```
-
-### Docker should run Postgres
-
-```bash
-docker-compose up --build 
-```
-
-Это запустить докер в фоновом режиме, а порт постргесс будет 5433
-
-### Running App
-
-```bash
-wails dev
-```
 
 ## Example of working App
 

@@ -22,7 +22,7 @@ func NewTaskRepository(conn *pgx.Conn) *TaskRepository {
 	}
 }
 
-// implement me
+
 func (tr *TaskRepository) Create(ctx context.Context, task model.Task) error {
 	q := `INSERT INTO tasks (title, body, priority, deadline, created_at) VALUES ($1, $2, $3, $4, $5)`
 	_, err := tr.conn.Exec(ctx, q, task.Title, task.Body, task.Priority, task.Deadline, task.CreatedAt)

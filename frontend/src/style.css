@@ -223,6 +223,13 @@ body {
     flex-wrap: wrap;
 }
 
+.task-title {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 0.2em;
+    display: block;
+}
+
 .priority-badge {
     padding: 4px 8px;
     border-radius: 12px;
