@@ -49,12 +49,26 @@ func (a *App) Greet(t model.Task) string {
 
 func (a *App) CreateTask(task model.Task) error {
 	log := a.log.With("method", "CreateTask")
+
 	ctx, cancel := context.WithTimeout(a.ctx, time.Second*5)
 	defer cancel()
 
 	// Ensure the task has an ID
 	if task.ID == uuid.Nil {
 		task.ID = uuid.New()
+	}
+
+	// Debug: log the incoming CreatedAt value
+	if task.CreatedAt == nil {
+		log.Info("[DEBUG] task.CreatedAt is nil (from client)")
+	} else {
+		log.Info("[DEBUG] task.CreatedAt from client", "created_at", task.CreatedAt.String())
+	}
+
+	// Ensure the created_at is set
+	if task.CreatedAt == nil || task.CreatedAt.IsZero() {
+		now := time.Now().UTC()
+		task.CreatedAt = &now
 	}
 
 	err := a.taskService.Create(ctx, task)
@@ -67,20 +81,20 @@ func (a *App) CreateTask(task model.Task) error {
 }
 
 func (a *App) GetTasks() ([]model.Task, error) {
-    log := a.log.With("method", "GetTasks")
+	log := a.log.With("method", "GetTasks")
 
-    tasks, err := a.taskService.GetTasks(a.ctx)
-    if err != nil {
-        log.Error("cannot get tasks", "error", err)
-        return []model.Task{}, err
-    }
+	tasks, err := a.taskService.GetTasks(a.ctx)
+	if err != nil {
+		log.Error("cannot get tasks", "error", err)
+		return []model.Task{}, err
+	}
 
-    log.Info("retrieved tasks", "count", len(tasks))
-    for i, task := range tasks {
-        log.Debug("task", "index", i, "id", task.ID, "title", task.Title, "status", task.Status)
-    }
+	log.Info("retrieved tasks", "count", len(tasks))
+	for i, task := range tasks {
+		log.Debug("task", "index", i, "id", task.ID, "title", task.Title, "status", task.Status)
+	}
 
-    return tasks, nil
+	return tasks, nil
 }
 
 func (a *App) UpdateTaskStatus(id string, status string) error {
@@ -97,12 +111,12 @@ func (a *App) UpdateTaskStatus(id string, status string) error {
 
 func (a *App) DeleteTask(id string) error {
 	log := a.log.With("method", "UpdateTaskStatus")
-	log.Info("Deleting task", "id", id) 
-    
-    if id == "" {
-        return fmt.Errorf("empty task ID")
-    }
-    
+	log.Info("Deleting task", "id", id)
+
+	if id == "" {
+		return fmt.Errorf("empty task ID")
+	}
+
 	err := a.taskService.DeleteTask(a.ctx, id)
 	if err != nil {
 		log.Error("cannot delete task", "error", err)

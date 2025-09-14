@@ -21,7 +21,7 @@ Created by Yermek Tairkhan, Тестовое задания для DMARK
 - Docker (для запуска Postgres)
 
 ## Чеклист реализованных возможностей
-Сделал все кроме того чтобы добавлять дату начала( Она всегда дает нынешнее время)
+Сделал все 
 ### Основные возможности
 -  Кросс-платформенное desktop-приложение на Wails (Go + JS)
 -  Хранение задач в базе данных Postgres
@@ -88,14 +88,6 @@ Created by Yermek Tairkhan, Тестовое задания для DMARK
     cd test3
 ```
 
-### Docker should run Postgres
-
-```bash
-docker-compose up --build 
-```
-
-Это запустить докер в фоновом режиме, а порт постргесс будет 5433
-
 ### Copy config file
 
 Linux, Mingw64
@@ -103,6 +95,14 @@ Linux, Mingw64
 ```bash
 cp config.example.yaml config.yaml
 ```
+
+### Docker should run Postgres
+
+```bash
+docker-compose up --build 
+```
+
+Это запустить докер в фоновом режиме, а порт постргесс будет 5433
 
 ### Running App
 

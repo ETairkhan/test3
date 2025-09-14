@@ -8,7 +8,7 @@ export namespace model {
 	    status: string;
 	    priority: number;
 	    // Go type: time
-	    created_at: any;
+	    CreatedAt?: any;
 	    // Go type: time
 	    deadline?: any;
 	
@@ -24,7 +24,7 @@ export namespace model {
 	        this.done = source["done"];
 	        this.status = source["status"];
 	        this.priority = source["priority"];
-	        this.created_at = this.convertValues(source["created_at"], null);
+	        this.CreatedAt = this.convertValues(source["CreatedAt"], null);
 	        this.deadline = this.convertValues(source["deadline"], null);
 	    }
 	

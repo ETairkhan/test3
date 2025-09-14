@@ -101,6 +101,14 @@ class TodoApp {
                 case 'high': priority = 3; break;
             }
 
+            // Handle start date
+            let startDate = null;
+            if (this.startDateInput.value) {
+                startDate = new Date(this.startDateInput.value).toISOString();
+            } else {
+                startDate = new Date().toISOString();
+            }
+
             // Handle deadline date
             let deadline = null;
             if (this.endDateInput.value) {
@@ -113,7 +121,7 @@ class TodoApp {
                 Body: desc,
                 Priority: priority,
                 Status: "not_started",
-                CreatedAt: new Date().toISOString(),
+                CreatedAt: startDate,
                 Deadline: deadline,
                 Done: false
             };
