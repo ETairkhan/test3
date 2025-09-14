@@ -140,7 +140,7 @@ class TodoApp {
             this.endDateInput.value = '';
             this.prioritySelect.value = 'medium';
             
-        } catch (error) {
+        } catch (error) {В
             console.error('Ошибка добавления задачи:', error);
             alert('Не удалось добавить задачу: ' + error.message);
         }
@@ -164,7 +164,8 @@ class TodoApp {
             let newStatus;
             const currentStatus = task.Status || task.status;
             if (currentStatus === 'done') {
-                newStatus = 'not_started';
+                // Если задача была завершена и снимаем галочку, переводим в активные
+                newStatus = 'in_progress';
             } else if (currentStatus === 'in_progress') {
                 newStatus = 'done';
             } else {
